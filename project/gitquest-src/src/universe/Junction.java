@@ -43,6 +43,9 @@ public class Junction implements AuthorContribution
 	 *            getVotes   - returns the number of up/downvotes on this 
 	 *                         junction.
 	 *            bIsMutable - determines if the Junction can be edited by anyone.
+	 *            addAuthor  - adds a new author to the Junction if permitted.
+	 *            upVote     - upvotes the Junction.
+	 *            downVote   - downvotes the Junction.
 	 */
 	
 	/**
@@ -81,5 +84,48 @@ public class Junction implements AuthorContribution
 	public boolean bIsMutable() 
 	{
 		return mVotes > IMMUTABLE_VOTE_THRESHOLD;
+	}
+
+	/**
+	 * Purpose: Adds a new author to the Junction. Should prevent this if  
+	 * 					bIsMutable is false.
+	 * Overridden from: AuthorContribution.
+	 * @author dalt6282
+	 * @version 0.0.1
+	 * @param author - the author to be added.
+	 */
+	@Override
+	public void addAuthor(String author) 
+	{
+		if (!bIsMutable())
+		{
+			mAuthors.add (author);
+		}
+	}
+
+	/**
+	 * Purpose: Upvote this Junction. Junctions with a high upvote cannot be 
+	 *          edited.
+	 * Overriden from: AuthorContribution.
+	 * @author dalt6282
+	 * @version 0.0.1
+	 */
+	@Override
+	public void upVote() 
+	{
+		mVotes++;
+	}
+
+	/**
+	 * Purpose: Downvote this Junction. Junctions with a low upvote will be 
+	 * 					purged.
+	 * Overriden from: AuthorContribution.
+	 * @author dalt6282
+	 * @version 0.0.1
+	 */
+	@Override
+	public void downVote() 
+	{
+		mVotes--;
 	}
 }

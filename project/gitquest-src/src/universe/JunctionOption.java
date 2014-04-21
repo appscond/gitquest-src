@@ -32,6 +32,9 @@ public class JunctionOption implements AuthorContribution
 	 *            getVotes   - returns the number of up/downvotes on this 
 	 *                         JunctionOption.
 	 *            bIsMutable - determines if the option is mutable by anyone.
+	 *            addAuthor  - adds a new author to the JunctionOption if allowed.
+	 *            upVote     - upvotes the JunctionOption.
+	 *            downVote   - downvotes the JunctionOption.
 	 */
 	
 	/**
@@ -70,6 +73,49 @@ public class JunctionOption implements AuthorContribution
 	public boolean bIsMutable() 
 	{
 		return mVotes > IMMUTABLE_VOTE_THRESHOLD;
+	}
+
+	/**
+	 * Purpose: Adds a new author to the JunctionOption. Should prevent this if  
+	 * 					bIsMutable is false.
+	 * Overridden from: AuthorContribution.
+	 * @author dalt6282
+	 * @version 0.0.1
+	 * @param author - the author to be added.
+	 */
+	@Override
+	public void addAuthor(String author) 
+	{
+		if (!bIsMutable())
+		{
+			mAuthors.add (author);
+		}
+	}
+
+	/**
+	 * Purpose: Upvote this JunctionOption. JunctionOptions with a high upvote 
+	 *          cannot be edited.
+	 * Overriden from: AuthorContribution.
+	 * @author dalt6282
+	 * @version 0.0.1
+	 */
+	@Override
+	public void upVote() 
+	{
+		mVotes++;
+	}
+
+	/**
+	 * Purpose: Downvote this Junction. JunctionOptions with a low upvote will be 
+	 * 					purged.
+	 * Overriden from: AuthorContribution.
+	 * @author dalt6282
+	 * @version 0.0.1
+	 */
+	@Override
+	public void downVote() 
+	{
+		mVotes--;
 	}
 
 }

@@ -1,6 +1,6 @@
 package universe;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * @author dalt6282
@@ -22,9 +22,9 @@ public class Junction implements AuthorContribution
 	 *          mTitle         - string representing a quick way for players to  
 	 *                           refer to this junction.
 	 *          mText          - string describing what happens at the junction.
-	 *          mPlayerOptions - vector of the junctions available to the player
-	 *                           from this junction.
-	 *          mAuthors       - vector of strings referring to the authors of 
+	 *          mPlayerOptions - arraylist of the junctions available to the 
+	 *                           player from this junction.
+	 *          mAuthors       - arraylist of strings referring to the authors of 
 	 *                           this junction.
 	 *          mVotes         - (signed) int of upvotes and downvotes on the 
 	 *                           junction.
@@ -32,16 +32,17 @@ public class Junction implements AuthorContribution
 	int mID;
 	String mTitle;
 	String mText;
-	Vector <JunctionOption> mPlayerOptions;
-	Vector <String> mAuthors;
+	ArrayList <JunctionOption> mPlayerOptions;
+	ArrayList <String> mAuthors;
 	int mVotes;
 	
 	/*
 	 * (non-Javadoc)
 	 * @see universe.AuthorContribution#getAuthors()
-	 * Functions: getAuthors - returns a copy of the vector of authors.
+	 * Functions: getAuthors - returns a copy of the arraylist of authors.
 	 *            getVotes   - returns the number of up/downvotes on this 
 	 *                         junction.
+	 *            bIsMutable - determines if the Junction can be edited by anyone.
 	 */
 	
 	/**
@@ -49,11 +50,11 @@ public class Junction implements AuthorContribution
 	 * Overriden from: AuthorContribution.
 	 * @author dalt6282
 	 * @version 0.0.1
-	 * @return - a vector of strings. Each string is an author handle.
+	 * @return - a arraylist of strings. Each string is an author handle.
 	 */
 	@Override
-	public Vector<String> getAuthors() {
-		return new Vector<String> (mAuthors);
+	public ArrayList<String> getAuthors() {
+		return new ArrayList<String> (mAuthors);
 	}
 	
 	/**
@@ -70,11 +71,11 @@ public class Junction implements AuthorContribution
 	}
 	
 	/**
-	 * Purpose: Determines if the junction is capable of being modified.
+	 * Purpose: Determines if the Junction is capable of being modified.
 	 * Overridden from: AuthorContribution.
 	 * @author dalt6282
 	 * @version 0.0.1
-	 * @return - whether or not an author can change the junction.
+	 * @return - whether or not an author can change the Junction.
 	 */
 	@Override
 	public boolean bIsMutable() 

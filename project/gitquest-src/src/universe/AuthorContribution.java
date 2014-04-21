@@ -1,10 +1,10 @@
 package universe;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 public interface AuthorContribution 
 {
-	Vector <String> getAuthors ();
+	ArrayList <String> getAuthors ();
 	int getVotes ();
 	boolean bIsMutable ();
 }

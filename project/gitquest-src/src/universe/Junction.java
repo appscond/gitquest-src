@@ -38,7 +38,6 @@ public class Junction implements AuthorContribution
 	
 	/*
 	 * (non-Javadoc)
-	 * @see universe.AuthorContribution#getAuthors()
 	 * Functions: getAuthors - returns a copy of the arraylist of authors.
 	 *            getVotes   - returns the number of up/downvotes on this 
 	 *                         junction.
@@ -46,6 +45,7 @@ public class Junction implements AuthorContribution
 	 *            addAuthor  - adds a new author to the Junction if permitted.
 	 *            upVote     - upvotes the Junction.
 	 *            downVote   - downvotes the Junction.
+	 *            Junction   - constructor for the class, takes ID argument.
 	 */
 	
 	/**
@@ -127,5 +127,22 @@ public class Junction implements AuthorContribution
 	public void downVote() 
 	{
 		mVotes--;
+	}
+	
+	/**
+	 * Purpose: Construct a Junction object. Takes an ID supplied (presumably) by
+	 *          a Universe object that created it.
+	 * @author dalt6282
+	 * @version 0.0.1
+	 * @param id
+	 */
+	public Junction (int id)
+	{
+		mID = id;
+		mAuthors = new ArrayList<String> ();
+		mPlayerOptions = new ArrayList<JunctionOption> ();
+		mText = "";
+		mTitle = "";
+		mVotes = 0;
 	}
 }

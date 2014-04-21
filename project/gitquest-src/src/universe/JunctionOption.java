@@ -27,14 +27,14 @@ public class JunctionOption implements AuthorContribution
 	
 	/*
 	 * (non-Javadoc)
-	 * @see universe.AuthorContribution#getAuthors()
-	 * Functions: getAuthors - returns a copy of the arraylist of authors.
-	 *            getVotes   - returns the number of up/downvotes on this 
-	 *                         JunctionOption.
-	 *            bIsMutable - determines if the option is mutable by anyone.
-	 *            addAuthor  - adds a new author to the JunctionOption if allowed.
-	 *            upVote     - upvotes the JunctionOption.
-	 *            downVote   - downvotes the JunctionOption.
+	 * Functions: getAuthors     - returns a copy of the arraylist of authors.
+	 *            getVotes       - returns the number of up/downvotes on this 
+	 *                             JunctionOption.
+	 *            bIsMutable     - determines if the option is mutable by anyone.
+	 *            addAuthor      - adds new author to JunctionOption if allowed.
+	 *            upVote         - upvotes the JunctionOption.
+	 *            downVote       - downvotes the JunctionOption.
+	 *            JunctionOption - creates a new JunctionOption.
 	 */
 	
 	/**
@@ -118,4 +118,16 @@ public class JunctionOption implements AuthorContribution
 		mVotes--;
 	}
 
+	/**
+	 * Purpose: Create a JunctionOption object.
+	 * @author dalt6282
+	 * @version 0.0.1
+	 */
+	public JunctionOption ()
+	{
+		mAuthors = new ArrayList<String> ();
+		mDestinationID = 0;
+		mText = "";
+		mVotes = 0;
+	}
 }

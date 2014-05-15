@@ -19,6 +19,8 @@ import org.eclipse.jgit.api.errors.UnmergedPathsException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.RepositoryCache;
+import org.eclipse.jgit.util.FS;
 
 //TODO: improve comment style to match that of dalt6282.
 //TODO: actually deal with exceptions.
@@ -26,9 +28,9 @@ import org.eclipse.jgit.lib.Repository;
 /**This class provides a simple interface for using common low-level git commands.*/
 public class GitInterface {
 	/**stores the directory of the local clone of the git branch. */
-	private String localPath="~/gitquest/gitquest-core";
-	/**stores the directory of the remote clone of the git branch. */
-	private String remotePath="https://bitbucket.com/appscond/gitquest-core";
+	private String localPath=System.getProperty("user.home")+"/gitquest/gitquest-core";
+	/**stores the directory of the remote clone of the git branch.*/
+	private String remotePath="https://github.com/appscond/gitquest-core";
 	private Repository localRepo;
 	private Git git;
 	/**Like GitInterface(String localPath), but uses the default local path.*/
@@ -46,8 +48,22 @@ public class GitInterface {
 	}
 	/**Sets the URI to the remote repository. This method can be called multiple times to overwrite the remote path
 	 * without problems.*/
-    public void setRemotePath(String remotePath){
+    public void setRemoteRepositoryPath(String remotePath){
     	this.remotePath=remotePath;
+    }
+    /**Sets the path to the local repository. This method can be called multiple times to overwrite the remote path
+	 * without problems, although cloneFromRemote() or createNewRepository() should be called immediately afterward.*/
+    public void setLocalRepositoryPath(String localPath){
+    	this.localPath=localPath;
+    }
+    /**Returns true iff the local repository (as specifiedexists.*/
+    public boolean getExistsRepository(){
+    	//Use jgit's local repo detection system.
+    	boolean detected = RepositoryCache.FileKey.isGitRepository(new File(localPath), FS.DETECTED);
+    	//If that returns false, it's still possible a partially-constructed git repo exists:
+    	if (new File(localPath + "/.git").exists())
+    		detected=true;
+    	return detected;
     }
     /**Creates a new repository at the location specified at construction.*/
     public void createNewRepository(){

@@ -1,8 +1,11 @@
 package engine;
 
 import gitio.GitInterface;
+import gitio.SSHInterface;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Random;
 
 public class GitInterfaceTester {
 	public static void main(String[] args){
@@ -13,8 +16,14 @@ public class GitInterfaceTester {
 			if (!exists){
 				git.cloneFromRemote();
 			}
+			File local = git.getLocalRepositoryPath();
+			Random r = new Random();
+			File rf = new File(local.getAbsolutePath()+"/test/file"+r.nextInt(10000));
+			rf.getParentFile().mkdir();
+			rf.createNewFile();
+			git.stageAndCommit("testClient", "nstbayless@gmail.com", "Added random test file (" + rf.getName()+")");
+			git.pushToRemote();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

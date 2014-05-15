@@ -33,6 +33,8 @@ public class GitInterface {
 	private String remotePath="https://github.com/appscond/gitquest-core";
 	private Repository localRepo;
 	private Git git;
+	/**public member can be accessed to set ssh-keys used for apache git server identification.*/
+	public final SSHInterface ssh = new SSHInterface();
 	/**Like GitInterface(String localPath), but uses the default local path.*/
 	public GitInterface() throws IOException{
 		this(null);
@@ -56,6 +58,9 @@ public class GitInterface {
     public void setLocalRepositoryPath(String localPath){
     	this.localPath=localPath;
     }
+	public File getLocalRepositoryPath() {
+		return new File(localPath);
+	}
     /**Returns true iff the local repository (as specifiedexists.*/
     public boolean getExistsRepository(){
     	//Use jgit's local repo detection system.
@@ -141,6 +146,7 @@ public class GitInterface {
 		} catch (InvalidRemoteException e) {
 			e.printStackTrace();
 		} catch (TransportException e) {
+			//e.g. not authorized.
 			e.printStackTrace();
 		} catch (GitAPIException e) {
 			e.printStackTrace();

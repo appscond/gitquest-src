@@ -187,13 +187,15 @@ public class GitInterface {
 			e.printStackTrace();
 		}
     }
+    /**sets the SSH Key to be used for authentication when connecting to the remote using SSH.*/
     public void setSSHKey(File pathToKey){
-    	//TODO implement
+    	userSpecifiedSSHKeyPath=pathToKey;
     }
     public void setCredentials(){
-    	//TODO implement
+    	//TODO implement username and password authentication.
     }
-    /**returns different result for https than ssh*/
+    /**Returns a String containing the path to the remote repository,
+     * either the SSH version or the HTTPS version, depending on if useSSH is true.*/
     private String getRemotePath() {
     	if (useSSH)
     		return remoteSSHPath;

@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.CanceledException;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
 import org.eclipse.jgit.api.errors.DetachedHeadException;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -49,7 +50,9 @@ public class GitInterface {
 		this(null);
 	}
 	/**Creates a new handler for a git repository at the given location. The repository does not need to exist yet;
-	 *  createNewRepository() can be called afterward.*/
+	 *  createNewRepository() can be called afterward.
+	 *  
+	 *  @param localPath is a (preferably absolute) path to the (not yet necessarily existent) local repository.*/
 	public GitInterface(String localPath) throws IOException{
 		if (localPath!=null)
 			if (localPath.length()>0)
@@ -60,16 +63,19 @@ public class GitInterface {
 	}
 	/**Sets the URI to the remote repository as used for identification. This method can be called multiple times to overwrite the remote path
 	 * without problems.
-	 * 
+	 * <br><br>
 	 * If ssh is true, this GitInterface object will use ssh authentication when connecting with the remote repository.
 	 * A default ssh-key may be found in the gitquest repository, and will be used iff useDefaultAnonymousSSHKey(true) is called.
 	 * setSSHKey() can be called to provide a different key.
 	 * If no key is specified by either of the above methods, ssh authentication will still occur, but no key will be provided. This will fail if the server demands SSH authentication.
 	 * remotePath should be of the form *@*:pathToRemote, e.g. ssh@example.com:user/repo, or else an IllegalArgumentException will be thrown.
-	 * 
+	 * <br><br>
 	 * If ssh is false, this GitInterface object will use https authentication when connecting with the remote repository.
 	 * Unless the repository allows anonymous commits, a username and password will have to be specified with setCredentials().
-	 * remotePath should be of the form https://*, or else an IllegalArgumentException will be thrown. */
+	 * remotePath should be of the form https://*, or else an IllegalArgumentException will be thrown.
+	 * 
+	 * @param remotePath The URI for the remote repository, in either ssh or https format.
+	 * @param ssh specifies whether to use ssh (true) or https (false) connections.*/
     public void setRemoteRepositoryPath(String remotePath, boolean ssh) throws IllegalArgumentException {
     	remotePath=remotePath.trim();
     	if (ssh) {
@@ -88,14 +94,16 @@ public class GitInterface {
     	}
     }
     /**Sets the path to the local repository. This method can be called multiple times to overwrite the remote path
-	 * without problems, although cloneFromRemote() or createNewRepository() should be called immediately afterward.*/
+	 * without problems, although cloneFromRemote() or createNewRepository() should be called immediately afterward.
+	 * 
+	 * @param localPath is the (preferably absolute) path the local repository. Note that this directory doesn't have to exist yet.*/
     public void setLocalRepositoryPath(String localPath){
     	this.localPath=localPath;
     }
 	public File getLocalRepositoryPath() {
 		return new File(localPath);
 	}
-    /**Returns true iff the local repository (as specifiedexists.*/
+    /**Returns true iff the local repository (as specified in setLocalRepositoryPath() or in the constructor) exists.*/
     public boolean getExistsRepository(){
     	//Use jgit's local repo detection system.
     	boolean detected = RepositoryCache.FileKey.isGitRepository(new File(localPath), FS.DETECTED);
@@ -104,7 +112,9 @@ public class GitInterface {
     		detected=true;
     	return detected;
     }
-    /**Creates a new repository at the location specified at construction.*/
+    /**Creates a new repository at the location specified at construction.
+     * This is equivalent to calling git init on the command line.  
+     * Creates the path to the local repository, if necessary.*/
     public void createNewRepository(){
     	try {
 			git=Git.init().setDirectory(new File(localPath)).call();
@@ -112,8 +122,13 @@ public class GitInterface {
 			e.printStackTrace();
 		}
     }
-    /**Stages all files in the local git repository and commits them with the given metadata.*/
+    /**Stages all files in the local git repository and commits them with the given metadata.
+     * 
+     * @param author The alias of the author for the commit.
+     * @param email must be a valid email, and preferably a useful one.
+     * @param message is the commit message. An empty message will cause the commit to fail.*/
     public void stageAndCommit(String author,String email,String message){
+    	//TODO tackle the daunting number of exceptions in this method.
     	try {
 			git.add().addFilepattern(".").call();
 		} catch (NoFilepatternException e) {
@@ -123,6 +138,7 @@ public class GitInterface {
 		}
     	try {
 			git.commit().setMessage(message).setAuthor(author, email).setCommitter(author, email).call();
+			return;
 		} catch (NoHeadException e) {
 			e.printStackTrace();
 		} catch (NoMessageException e) {
@@ -136,9 +152,17 @@ public class GitInterface {
 		} catch (GitAPIException e) {
 			e.printStackTrace();
 		}
+    	//undo git.add if commit fails:
+    	try {
+			git.reset().call();
+		} catch (CheckoutConflictException e) {
+			e.printStackTrace();
+		} catch (GitAPIException e) {
+			e.printStackTrace();
+		}
     }
     /**Creates a new repository at the location specified at construction by cloning from the
-     * remote URI specified in setRemotePath.*/
+     * remote URI specified in setRemotePath. Creates the path to the local repository, if necessary.*/
     public void cloneFromRemote() throws IOException{
     	//TODO: handle password-protected remote https repositories.
     	try {
@@ -199,11 +223,15 @@ public class GitInterface {
 			e.printStackTrace();
 		}
     }
-    /**sets the SSH Key to be used for authentication when connecting to the remote using SSH.*/
+    /**sets the SSH Key to be used for authentication when connecting to the remote using SSH.
+     * 
+     * @param pathToKey The path to the file containing the desired SSH key.*/
     public void setSSHKey(File pathToKey){
     	ssh.setID(userSpecifiedSSHKeyPath=pathToKey);
     }
-    /**Tells git to use the anonymous SSH key specified by the gitquest repository.*/
+    /**Tells git to use the anonymous SSH key specified by the gitquest repository.
+     * 
+     * @param use True if the default SSH key should be used, false if the SSH key specified in setSSHKey() should be used.*/
 	public void useDefaultAnonymousSSHKey(boolean use) {
 		if (use)
 			ssh.setID(defaultAnonymousSSHKeyPath);

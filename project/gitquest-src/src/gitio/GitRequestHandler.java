@@ -31,7 +31,7 @@ import org.eclipse.jgit.util.FS;
  * This class provides a simple interface for using common low-level git
  * commands.
  */
-public class GitInterface {
+public class GitRequestHandler {
 	/** stores the directory of the local clone of the git branch. */
 	private String localPath = System.getProperty("user.home")
 			+ "/gitquest/gitquest-core";
@@ -61,7 +61,7 @@ public class GitInterface {
 	private File userSpecifiedSSHKeyPath = null;
 
 	/** Like GitInterface(String localPath), but uses the default local path. */
-	public GitInterface() throws IOException {
+	public GitRequestHandler() throws IOException {
 		this(null);
 	}
 
@@ -76,7 +76,7 @@ public class GitInterface {
 	 *            is a (preferably absolute) path to the (not yet necessarily
 	 *            existent) local repository.
 	 */
-	public GitInterface(String localPath) throws IOException {
+	public GitRequestHandler(String localPath) throws IOException {
 		if (localPath != null)
 			if (localPath.length() > 0)
 				this.localPath = localPath;

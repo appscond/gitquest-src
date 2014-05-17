@@ -9,7 +9,7 @@ public class JunctionOption implements AuthorContribution
 	 *                                             to prevent the JunctionOption 
 	 *                                             from being modified.
 	 */
-	final int IMMUTABLE_VOTE_THRESHOLD = 5;
+	final static int IMMUTABLE_VOTE_THRESHOLD = 5;
 	
 	/*
 	 * Members: mDestinationID - int id of the junction we are pointing to from

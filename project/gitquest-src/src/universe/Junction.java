@@ -16,7 +16,7 @@ public class Junction implements AuthorContribution
 	 */
 	final int IMMUTABLE_VOTE_THRESHOLD = 5;
 	/*
-	 * Members: mID            - int that is extracted from the Universe at  
+	 * Members: mID            - unique int that is extracted from the Universe at  
 	 *                           construction time. If there is a git conflict, 
 	 *                           this will at least need to be recomputed.
 	 *          mTitle         - string representing a quick way for players to  
@@ -29,6 +29,7 @@ public class Junction implements AuthorContribution
 	 *          mVotes         - (signed) int of upvotes and downvotes on the 
 	 *                           junction.
 	 */
+
 	int mID;
 	String mTitle;
 	String mText;
@@ -46,6 +47,7 @@ public class Junction implements AuthorContribution
 	 *            upVote     - upvotes the Junction.
 	 *            downVote   - downvotes the Junction.
 	 *            Junction   - constructor for the class, takes ID argument.
+	 *            HashCode	 - returns the mID of this object to simplify storage in a hash table.
 	 */
 	
 	/**
@@ -88,7 +90,7 @@ public class Junction implements AuthorContribution
 
 	/**
 	 * Purpose: Adds a new author to the Junction. Should prevent this if  
-	 * 					bIsMutable is false.
+	 * 					bIsMutable() is false.
 	 * Overridden from: AuthorContribution.
 	 * @author dalt6282
 	 * @version 0.0.1
@@ -131,7 +133,7 @@ public class Junction implements AuthorContribution
 	
 	/**
 	 * Purpose: Construct a Junction object. Takes an ID supplied (presumably) by
-	 *          a Universe object that created it.
+	 *          the Universe object that created it.
 	 * @author dalt6282
 	 * @version 0.0.1
 	 * @param id
@@ -144,5 +146,14 @@ public class Junction implements AuthorContribution
 		mText = "";
 		mTitle = "";
 		mVotes = 0;
+	}
+	/**
+	 * Purpose: Return a uniquely-identifying value for this Junction instance.
+	 * @author NaOH
+	 * @version 0.0.1
+	 * */
+	@Override
+	public int hashCode() {
+		return mID;
 	}
 }

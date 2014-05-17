@@ -24,7 +24,6 @@ import org.eclipse.jgit.lib.RepositoryCache;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FS;
 
-//TODO: improve comment style to match that of dalt6282.
 //TODO: actually deal with exceptions.
 
 /**
@@ -32,15 +31,19 @@ import org.eclipse.jgit.util.FS;
  * commands.
  */
 public class GitRequestHandler {
-	/** stores the directory of the local clone of the git branch. */
-	private String localPath = System.getProperty("user.home")
-			+ "/gitquest/gitquest-core";
-	/** stores the directory of the remote clone of the git branch. */
-	private String remoteSSHPath = "git@github.com:appscond/gitquest-core";
-	private String remoteHTTPSPath = "https://github.com/appscond/gitquest-core";
 	private Repository localRepo;
 	private Git git;
-	/** used to set ssh-keys used for apache git server identification. */
+	/**Stores the directory of the local clone of the git branch.*/
+	private String localPath = System.getProperty("user.home")
+			+ "/gitquest/gitquest-core";
+	/**Stores the directory of the remote clone of the git branch under the HTTPS URL.*/
+	private String remoteHTTPSPath = "https://github.com/appscond/gitquest-core";
+	
+	//TODO consider placing some of the following members and their associated methods in SSHInterface?
+	
+	/**Stores the directory of the remote clone of the git branch under the SSH URI.*/
+	private String remoteSSHPath = "git@github.com:appscond/gitquest-core";
+	/**Used to set ssh-keys used for apache git server identification. */
 	private final SSHInterface ssh = new SSHInterface();
 	/**
 	 * If this is true, authentication will use the ssh key (either
@@ -60,6 +63,8 @@ public class GitRequestHandler {
 	 */
 	private File userSpecifiedSSHKeyPath = null;
 
+	
+	
 	/** Like GitInterface(String localPath), but uses the default local path. */
 	public GitRequestHandler() throws IOException {
 		this(null);

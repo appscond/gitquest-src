@@ -30,11 +30,19 @@ public class GitInterface {
 	/**stores the directory of the local clone of the git branch. */
 	private String localPath=System.getProperty("user.home")+"/gitquest/gitquest-core";
 	/**stores the directory of the remote clone of the git branch.*/
-	private String remotePath="https://github.com/appscond/gitquest-core";
+	private String remoteSSHPath="git@github.com:appscond/gitquest-core";
+	private String remoteHTTPSPath="https://github.com/appscond/gitquest-core";
 	private Repository localRepo;
 	private Git git;
-	/**public member can be accessed to set ssh-keys used for apache git server identification.*/
-	public final SSHInterface ssh = new SSHInterface();
+	/**used to set ssh-keys used for apache git server identification.*/
+	private final SSHInterface ssh = new SSHInterface();
+	/**If this is true, authentication will use the ssh key (either userSpecifiedSSHKeyPath or defaultAnonymousSSHKeyPath)*/
+	private boolean useSSH=true;
+	/**Stores the path to the default key used for anonymous SSH authentication to the remote git repository.
+	 * This field can be modified, but it's better to change UserSpecifiedSSHKey via the setSSHKey() method.*/
+	private File defaultAnonymousSSHKeyPath;
+	/**Stores the path to the key used for SSH authentication to the remote git repository, as specified by the user in setSSHKey().*/
+	private File userSpecifiedSSHKeyPath = null;
 	/**Like GitInterface(String localPath), but uses the default local path.*/
 	public GitInterface() throws IOException{
 		this(null);
@@ -45,13 +53,38 @@ public class GitInterface {
 		if (localPath!=null)
 			if (localPath.length()>0)
 				this.localPath=localPath;
-		localRepo = new FileRepository(this.localPath + "/.git");
+		localRepo = new FileRepository(getLocalRepositoryPath() + "/.git");
+		defaultAnonymousSSHKeyPath=new File(getLocalRepositoryPath() + "/.ssh/id_anon");
 		git = new Git(localRepo);
+		useDefaultAnonymousSSHKey(true);
 	}
-	/**Sets the URI to the remote repository. This method can be called multiple times to overwrite the remote path
-	 * without problems.*/
-    public void setRemoteRepositoryPath(String remotePath){
-    	this.remotePath=remotePath;
+	/**Sets the URI to the remote repository as used for identification. This method can be called multiple times to overwrite the remote path
+	 * without problems.
+	 * 
+	 * If ssh is true, this GitInterface object will use ssh authentication when connecting with the remote repository.
+	 * A default ssh-key may be found in the gitquest repository, and will be used automatically unless setSSHKey() is called to provide a different key.
+	 * remotePath should be of the form *@*.*:pathToRemote, e.g. ssh@example.com:user/repo, or else an IllegalArgumentException will be thrown.
+	 * 
+	 * If ssh is false, this GitInterface object will use https authentication when connecting with the remote repository.
+	 * Unless the repository allows anonymous commits, a username and password will have to be specified with setCredentials().
+	 * remotePath should be of the form https://*, or else an IllegalArgumentException will be thrown. */
+    public void setRemoteRepositoryPath(String remotePath, boolean ssh) throws IllegalArgumentException {
+    	remotePath=remotePath.trim();
+    	if (ssh) {
+    		if (remotePath.matches("\\A.+@.+\\..+(:.+)?\\Z")){
+    			useSSH=true;
+    			this.remoteSSHPath=remotePath;
+    		}
+    		else throw new IllegalArgumentException();
+    	}
+    	else {
+    		if (remotePath.matches("https://.+")) {
+    			useSSH=false;
+    			this.remoteHTTPSPath=remotePath;
+    		}
+    		else throw new IllegalArgumentException();
+    	}
+    	
     }
     /**Sets the path to the local repository. This method can be called multiple times to overwrite the remote path
 	 * without problems, although cloneFromRemote() or createNewRepository() should be called immediately afterward.*/
@@ -106,8 +139,9 @@ public class GitInterface {
     /**Creates a new repository at the location specified at construction by cloning from the
      * remote URI specified in setRemotePath.*/
     public void cloneFromRemote() throws IOException{
+    	//TODO: handle password-protected remote https repositories.
     	try {
-			git=Git.cloneRepository().setURI(remotePath).setDirectory(new File(localPath)).call();
+			git=Git.cloneRepository().setURI(getRemotePath()).setDirectory(new File(localPath)).call();
     	} catch (InvalidRemoteException e) {
 			e.printStackTrace();
 		} catch (TransportException e) {
@@ -116,9 +150,11 @@ public class GitInterface {
 			e.printStackTrace();
 		}
     }
+    //untested:
     public void pullFromRemote() throws IOException{
+    	//TODO: handle password-protected remote https repositories.
 		try {
-			git.pull().call();
+			git.pull().setRemote(getRemotePath()).call();
 		} catch (WrongRepositoryStateException e) {
 			e.printStackTrace();
 		} catch (InvalidConfigurationException e) {
@@ -140,9 +176,8 @@ public class GitInterface {
 		}
     }
     public void pushToRemote() throws IOException{
-    	//TODO: this method most of all needs to deal with exceptions.
     	try {
-			git.push().setRemote(remotePath).call();
+			git.push().setRemote(getRemotePath()).call();
 		} catch (InvalidRemoteException e) {
 			e.printStackTrace();
 		} catch (TransportException e) {
@@ -152,4 +187,24 @@ public class GitInterface {
 			e.printStackTrace();
 		}
     }
+    public void setSSHKey(File pathToKey){
+    	//TODO implement
+    }
+    public void setCredentials(){
+    	//TODO implement
+    }
+    /**returns different result for https than ssh*/
+    private String getRemotePath() {
+    	if (useSSH)
+    		return remoteSSHPath;
+    	else
+    		return remoteHTTPSPath;
+	}
+    /**Tells git to use the anonymous SSH key specified by the gitquest repository.*/
+	private void useDefaultAnonymousSSHKey(boolean use) {
+		if (use)
+			ssh.setID(defaultAnonymousSSHKeyPath);
+		else
+			setSSHKey(userSpecifiedSSHKeyPath);
+	}
 }

@@ -2,24 +2,18 @@ package gitio;
 
 import java.io.File;
 
-import org.eclipse.jgit.errors.UnsupportedCredentialItem;
-import org.eclipse.jgit.transport.CredentialItem;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.CredentialsProviderUserInfo;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
-import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.util.FS;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import com.jcraft.jsch.UserInfo;
 
 /**
- * This class handles the creation and distribution of private ssh-keys used to
+ * This class handles the use of private ssh-keys used to
  * push to git repositories.
  */
 public class SSHInterface {
@@ -28,6 +22,7 @@ public class SSHInterface {
 	 * logins.
 	 */
 	private File sshid;
+
 	/** Keeps track of the ssh key in a way that GitInterface can use. */
 
 	SSHInterface() {
@@ -41,10 +36,13 @@ public class SSHInterface {
 	public void setID(final File id) {
 		this.sshid = id;
 		JschConfigSessionFactory sessionFactory = new JschConfigSessionFactory() {
-			
+
 			@Override
-			protected JSch getJSch(Host arg0, FS arg1) throws JSchException {
-				JSch jsch = new JSch();
+			protected JSch getJSch(Host hc, FS fs) throws JSchException {
+
+				final JSch jsch = super.createDefaultJSch(fs);
+
+				JSch.setConfig("PreferredAuthentications", "publickey");
 				try {
 					jsch.addIdentity(id.getAbsolutePath());
 				} catch (JSchException e) {
@@ -54,9 +52,9 @@ public class SSHInterface {
 			}
 
 			@Override
-		    protected void configure(OpenSshConfig.Host host, Session session) {
-		        session.setConfig("StrictHostKeyChecking", "yes");
-		    }
+			protected void configure(OpenSshConfig.Host host, Session session) {
+				session.setConfig("StrictHostKeyChecking", "false");
+			}
 		};
 		SshSessionFactory.setInstance(sessionFactory);
 	}

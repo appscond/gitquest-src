@@ -20,6 +20,7 @@ import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryCache;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FS;
 
 //TODO: improve comment style to match that of dalt6282.
@@ -39,7 +40,7 @@ public class GitInterface {
 	/**If this is true, authentication will use the ssh key (either userSpecifiedSSHKeyPath or defaultAnonymousSSHKeyPath)*/
 	private boolean useSSH=true;
 	/**Stores the path to the default key used for anonymous SSH authentication to the remote git repository.
-	 * This field can be modified, but it's better to change UserSpecifiedSSHKey via the setSSHKey() method.*/
+	 * This field can be modified (though no methods allow this openly at the moment), but it's better to change UserSpecifiedSSHKey via the setSSHKey() method.*/
 	private File defaultAnonymousSSHKeyPath;
 	/**Stores the path to the key used for SSH authentication to the remote git repository, as specified by the user in setSSHKey().*/
 	private File userSpecifiedSSHKeyPath = null;
@@ -56,14 +57,15 @@ public class GitInterface {
 		localRepo = new FileRepository(getLocalRepositoryPath() + "/.git");
 		defaultAnonymousSSHKeyPath=new File(getLocalRepositoryPath() + "/.ssh/id_anon");
 		git = new Git(localRepo);
-		useDefaultAnonymousSSHKey(true);
 	}
 	/**Sets the URI to the remote repository as used for identification. This method can be called multiple times to overwrite the remote path
 	 * without problems.
 	 * 
 	 * If ssh is true, this GitInterface object will use ssh authentication when connecting with the remote repository.
-	 * A default ssh-key may be found in the gitquest repository, and will be used automatically unless setSSHKey() is called to provide a different key.
-	 * remotePath should be of the form *@*.*:pathToRemote, e.g. ssh@example.com:user/repo, or else an IllegalArgumentException will be thrown.
+	 * A default ssh-key may be found in the gitquest repository, and will be used iff useDefaultAnonymousSSHKey(true) is called.
+	 * setSSHKey() can be called to provide a different key.
+	 * If no key is specified by either of the above methods, ssh authentication will still occur, but no key will be provided. This will fail if the server demands SSH authentication.
+	 * remotePath should be of the form *@*:pathToRemote, e.g. ssh@example.com:user/repo, or else an IllegalArgumentException will be thrown.
 	 * 
 	 * If ssh is false, this GitInterface object will use https authentication when connecting with the remote repository.
 	 * Unless the repository allows anonymous commits, a username and password will have to be specified with setCredentials().
@@ -71,7 +73,7 @@ public class GitInterface {
     public void setRemoteRepositoryPath(String remotePath, boolean ssh) throws IllegalArgumentException {
     	remotePath=remotePath.trim();
     	if (ssh) {
-    		if (remotePath.matches("\\A.+@.+\\..+(:.+)?\\Z")){
+    		if (remotePath.matches("\\A.+@.+(:.+)?\\Z")){
     			useSSH=true;
     			this.remoteSSHPath=remotePath;
     		}
@@ -84,7 +86,6 @@ public class GitInterface {
     		}
     		else throw new IllegalArgumentException();
     	}
-    	
     }
     /**Sets the path to the local repository. This method can be called multiple times to overwrite the remote path
 	 * without problems, although cloneFromRemote() or createNewRepository() should be called immediately afterward.*/
@@ -154,7 +155,18 @@ public class GitInterface {
     public void pullFromRemote() throws IOException{
     	//TODO: handle password-protected remote https repositories.
 		try {
-			git.pull().setRemote(getRemotePath()).call();
+			//TODO: technically, this should occur in setRemoteRepositoryPath(), i.e. when a new
+			//remote repository is set, and not on-the-fly before a pull.
+			//However, there are some irritating edge-cases that I don't want to deal with just yet. 
+			String path = getRemotePath();
+	    	StoredConfig config = git.getRepository().getConfig();
+	    	config.setString("remote", "origin", "url", path);
+	    	try {
+				config.save();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			git.pull().call();
 		} catch (WrongRepositoryStateException e) {
 			e.printStackTrace();
 		} catch (InvalidConfigurationException e) {
@@ -189,8 +201,16 @@ public class GitInterface {
     }
     /**sets the SSH Key to be used for authentication when connecting to the remote using SSH.*/
     public void setSSHKey(File pathToKey){
-    	userSpecifiedSSHKeyPath=pathToKey;
+    	ssh.setID(userSpecifiedSSHKeyPath=pathToKey);
     }
+    /**Tells git to use the anonymous SSH key specified by the gitquest repository.*/
+	public void useDefaultAnonymousSSHKey(boolean use) {
+		if (use)
+			ssh.setID(defaultAnonymousSSHKeyPath);
+		else
+			//TODO: this should throw an exception if userSpecifiedSSHKeyPath is null.
+			setSSHKey(userSpecifiedSSHKeyPath);
+	}
     public void setCredentials(){
     	//TODO implement username and password authentication.
     }
@@ -201,12 +221,5 @@ public class GitInterface {
     		return remoteSSHPath;
     	else
     		return remoteHTTPSPath;
-	}
-    /**Tells git to use the anonymous SSH key specified by the gitquest repository.*/
-	private void useDefaultAnonymousSSHKey(boolean use) {
-		if (use)
-			ssh.setID(defaultAnonymousSSHKeyPath);
-		else
-			setSSHKey(userSpecifiedSSHKeyPath);
 	}
 }
